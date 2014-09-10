@@ -1,0 +1,5 @@
+build/
+multitools
+*.pro.user
+Makefile
+output/
