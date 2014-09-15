@@ -26,9 +26,9 @@ std::vector<std::string> split(const std::string input)
     return {std::istream_iterator<std::string>{streamInput}, std::istream_iterator<std::string>{}};
 }
 
-bool converToMatrixFile(std::string loadFilename, std::string saveFilename)
+bool converToMatrixFile(std::string loadFilename, std::string saveFilename, const uint stride)
 {
-    bool isVertexProperties = false;
+    bool isAttributes = false;
     std::string line;
     std::ifstream inputFile(loadFilename);
     std::ofstream outputFile(saveFilename);
@@ -36,25 +36,31 @@ bool converToMatrixFile(std::string loadFilename, std::string saveFilename)
 
     if (inputFile.is_open())
     {
+        uint x = 0;
+        uint z = 0;
         glm::vec3 pos(0.0f);
         while (std::getline(inputFile, line))
         {
             //if (line.compare(PLY_END_HEADER) == 0)
             if (line.find(PLY_END_HEADER) != std::string::npos)
-            {
-                isVertexProperties = true;
-            }
+                isAttributes = true;
             else if (line.compare(PLY_END_ATTRIBUTE) == 0)
-            {
-                isVertexProperties = false;
-            }
-            else if (isVertexProperties)
-            {
+                isAttributes = false;
+            else if (isAttributes)
+            {                
                 values = split(line);
                 pos[0] = std::stof(values.at(0));
                 pos[1] = std::stof(values.at(1));
                 pos[2] = std::stof(values.at(2));
-                outputFile << pos[1] << std::endl;
+                outputFile << x << " " << z << " " << pos[1] << std::endl;
+
+                if (z < (stride-1))
+                    z++;
+                else
+                {
+                    x++;
+                    z = 0;
+                }
             }
         }
         inputFile.close();
@@ -96,7 +102,7 @@ int main(int argc, char *argv[])
                         std::string newFilename(std::string(file->d_name).substr(0,std::string(file->d_name).find_last_of(".")));
                         newFilename.append(".dat");
                         savePath.append(newFilename);
-                        if (converToMatrixFile(loadPath, savePath) && verbose)
+                        if (converToMatrixFile(loadPath, savePath, 104) && verbose)
                         {
                             std::clog << "file " << newFilename << " created." << std::endl;
                             ++filesCount;
